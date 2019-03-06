@@ -17,8 +17,12 @@ import re
 import binascii
 
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+
+USE_PROXY = False
+PROXY_ADDR = 'http://127.0.0.1:8080' # Burp Suite default
+
 
 requests_sent = 0
 char_requests = 0
@@ -268,12 +272,16 @@ def mode_brutekey():
             full_url = url_path + params + ciphertext
             urls[version] = full_url
 
+        proxies = None
+        if USE_PROXY:
+            proxies = { 'http' : PROXY_ADDR, 'https' : PROXY_ADDR }
+
         found_valid_version = False
         for version in urls:
             url = urls[version]
             request = requests.Request('GET', url)
             request = request.prepare()
-            response = session.send(request, verify=False)
+            response = session.send(request, verify=False, proxies=proxies)
             if response.status_code == 500:
                 continue
             else:
